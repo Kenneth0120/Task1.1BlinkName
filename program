@@ -1,0 +1,56 @@
+const int ledPin = 13; // Pin for LED
+const int buttonPin = 2; // Pin for button
+
+const char* kinhoMorse = "-.- .. -.  .... ---"; // Morse code for my first name "KIN HO"
+
+volatile bool ledState = false;
+unsigned long previousMillis = 0;
+const long dotDuration = 250; // Duration of a dot
+const long dashDuration = 750; // Duration of a dash
+const long spaceDuration = 1000; // Duration between characters
+int morseIndex = 0; // Index for the current character in Morse code
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  pinMode(buttonPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(buttonPin), toggleButtonState, FALLING);
+}
+
+void loop() {
+  if (ledState) {
+    blinkMorseCode();
+  }
+}
+
+void blinkMorseCode() {
+  unsigned long currentMillis = millis();
+
+  if (kinhoMorse[morseIndex] == '\0') { // Check if we reached the end of the Morse code
+    ledState = false; // Reset LED state
+    digitalWrite(ledPin, LOW); // Turn off the LED
+    morseIndex = 0; // Reset the Morse code index
+    return;
+  }
+
+  long interval = (kinhoMorse[morseIndex] == '.') ? dotDuration :
+                  (kinhoMorse[morseIndex] == '-') ? dashDuration : spaceDuration;
+
+  if (currentMillis - previousMillis >= interval) {
+    if (kinhoMorse[morseIndex] != ' ') {
+      digitalWrite(ledPin, !digitalRead(ledPin)); // Toggle LED state
+    }
+    previousMillis = currentMillis; // Update the timing
+    if (digitalRead(ledPin) == LOW || kinhoMorse[morseIndex] == ' ') {
+      morseIndex++; // Move to the next Morse code character
+    }
+  }
+}
+
+void toggleButtonState() {
+  ledState = !ledState; // Toggle the LED state
+  if (!ledState) {
+    digitalWrite(ledPin, LOW); // Turn off the LED immediately if the button is pressed
+    morseIndex = 0; // Reset the Morse code index
+  }
+  previousMillis = millis(); // Reset the timing
+}
